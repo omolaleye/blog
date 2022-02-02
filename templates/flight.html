@@ -1,0 +1,91 @@
+{% include "header.html" %}
+
+  <!-- Page Header -->
+  <header class="masthead" style="background-image: url('{{ url_for('static', filename='img/flight.jpg')}}')">
+    <div class="overlay"></div>
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-8 col-md-10 mx-auto">
+          <div class="page-heading">
+            {% if flight_msg_sent: %}
+            <h1>Thank you for joining our Flight Club</h1>
+            {% else: %}
+            <h1>Join Our Flight Club</h1>
+            {% endif %}
+            <span class="subheading">We let you know when flights to coolest destinations go super duper cheap!</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 col-md-10 mx-auto">
+        <p>Join countless of our already signed up members and never pay <em>full price</em> again</p>
+        <center><p>This Is How We Make It Happen!</p></center>
+                <br />
+          <!-- Features -->
+
+                  <section class="white-section" id="features">
+
+                    <div class="container-fluid">
+                      <div class="row">
+                        <div class="feature-box-left col-lg-4">
+                          <i class="icon fas fa-check-double fa-4x"></i>
+                          <h3 class="feature-title">Join Our Flight Club</h3>
+                          <p>Simply enter your email address, tell us where you'll like to fly from and we'll start sending you the cheapest flights on the web.</p>
+                        </div>
+
+                        <div class="feature-box-middle col-lg-4">
+                          <i class="icon fas fa-bullseye fa-4x"></i>
+                          <h3 class="feature-title">Get Cheap Flights Deals</h3>
+                          <p>We'll be busy finding you the best and cheapest flights around the globe, including discounts, hidden offers and more..</p>
+                        </div>
+
+                        <div class="feature-box-right col-lg-4">
+                          <i class="icon fas fa-plane fa-4x"></i>
+                          <h3 class="feature-title">Fly Around The World!</h3>
+                          <p>We'll email you the best deals as we find them and you just have to decide which suits you the best, then you're off on vacation!</p>
+                        </div>
+                      </div>
+                   </div>
+                  </section>
+
+
+        <!-- Contact Form - Enter your email address on line 19 of the mail/contact_me.php file to make this form work. -->
+        <!-- WARNING: Some web hosts do not allow emails to be sent through forms to common mail hosts like Gmail or Yahoo. It's recommended that you use a private domain email address! -->
+        <!-- To use the contact form, your site must be on a live web host with PHP! The form will not work locally! -->
+        <form name="sentMessage" id="contactForm" action="{{ url_for('flight') }}" method="post" novalidate>
+          <div class="control-group">
+            <div class="form-group floating-label-form-group controls">
+              <label>Name</label>
+              <input type="text" name="name" class="form-control" placeholder="Name" id="name" required data-validation-required-message="Please enter your name.">
+              <p class="help-block text-danger"></p>
+            </div>
+          </div>
+          <div class="control-group">
+            <div class="form-group floating-label-form-group controls">
+              <label>Email Address</label>
+              <input type="email" name="email" class="form-control" placeholder="Email Address" id="email" required data-validation-required-message="Please enter your email address.">
+              <p class="help-block text-danger"></p>
+            </div>
+          </div>
+          <br>
+          <div id="success"></div>
+          <button type="submit" class="btn btn-primary" id="sendMessageButton">Join</button>
+        </form>
+
+
+      </div>
+
+
+
+    </div>
+  </div>
+  <hr>
+
+
+
+  {% include "footer.html" %}
