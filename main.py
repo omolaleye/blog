@@ -15,13 +15,13 @@ import os
 
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.environ.get("APP_CONFIG_SECRET_KEY")
+app.config['SECRET_KEY'] = "8BYkEfBA6O6donzWlSihBXox7C0sKR6b"
 ckeditor = CKEditor(app)
 Bootstrap(app)
 gravatar = Gravatar(app, size=100, rating='g', default='retro', force_default=False, force_lower=False, use_ssl=False, base_url=None)
 
-MY_EMAIL = os.environ.get("EMAIL")
-MY_PASSWORD = os.environ.get("EMAIL_PASS")
+MY_EMAIL = "info@omlyms.com"
+MY_PASSWORD = "ncsgixzmgywnqxpa"
 
 ##CONNECT TO DB
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///blog.db'
