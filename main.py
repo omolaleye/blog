@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, url_for, flash, abort
+from flask import Flask, render_template, redirect, url_for, flash, abort, request
 from flask_bootstrap import Bootstrap
 from flask_ckeditor import CKEditor
 from datetime import date
@@ -9,10 +9,19 @@ from sqlalchemy.orm import relationship
 from flask_login import UserMixin, login_user, LoginManager, login_required, current_user, logout_user
 from forms import LoginForm, RegisterForm, CreatePostForm, CommentForm
 from flask_gravatar import Gravatar
-from flask import request
 import smtplib
+import requests
 import os
 
+from flask_wtf import FlaskForm
+from wtforms import StringField, SubmitField
+from wtforms.validators import DataRequired
+
+
+MOVIE_DB_API_KEY = os.environ.get("MOVIE_DB_API_KEY")
+MOVIE_DB_SEARCH_URL = os.environ.get("MOVIE_DB_SEARCH_URL")
+MOVIE_DB_INFO_URL = os.environ.get("MOVIE_DB_INFO_URL")
+MOVIE_DB_IMAGE_URL = os.environ.get("MOVIE_DB_IMAGE_URL")
 
 
 app = Flask(__name__)
@@ -25,7 +34,7 @@ MY_EMAIL = os.environ.get("EMAIL")
 MY_PASSWORD = os.environ.get("EMAIL_PASS")
 
 ##CONNECT TO DB
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DATABASE_URL",  "sqlite:///blog.db")
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DATABASE_URL")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 login_manager = LoginManager()
@@ -39,6 +48,100 @@ def inject_now():
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
+
+
+
+
+
+
+
+##CREATE TABLE
+class Movie(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(250), unique=True, nullable=False)
+    year = db.Column(db.Integer, nullable=False)
+    description = db.Column(db.String(500), nullable=False)
+    rating = db.Column(db.Float, nullable=True)
+    ranking = db.Column(db.Integer, nullable=True)
+    review = db.Column(db.String(250), nullable=True)
+    img_url = db.Column(db.String(250), nullable=False)
+db.create_all()
+
+
+class FindMovieForm(FlaskForm):
+    title = StringField("Movie Title", validators=[DataRequired()])
+    submit = SubmitField("Add Movie")
+
+
+class RateMovieForm(FlaskForm):
+    rating = StringField("Your Rating Out of 10 e.g. 7.5")
+    review = StringField("Your Review")
+    submit = SubmitField("Done")
+
+@app.route("/movie")
+def movie():
+    all_movies = Movie.query.order_by(Movie.rating).all()
+    for i in range(len(all_movies)):
+        all_movies[i].ranking = len(all_movies) - i
+    db.session.commit()
+    return render_template("movie.html", movies=all_movies)
+
+@app.route("/add", methods=["GET", "POST"])
+def add_movie():
+    form = FindMovieForm()
+    if form.validate_on_submit():
+        movie_title = form.title.data
+
+        response = requests.get(MOVIE_DB_SEARCH_URL, params={"api_key": MOVIE_DB_API_KEY, "query": movie_title})
+        data = response.json()["results"]
+        return render_template("select_movie.html", options=data)
+    return render_template("add_movie.html", form=form)
+
+
+@app.route("/find")
+def find_movie():
+    movie_api_id = request.args.get("id")
+    if movie_api_id:
+        movie_api_url = f"{MOVIE_DB_INFO_URL}/{movie_api_id}"
+        response = requests.get(movie_api_url, params={"api_key": MOVIE_DB_API_KEY, "language": "en-US"})
+        data = response.json()
+        new_movie = Movie(
+            title=data["title"],
+            year=data["release_date"].split("-")[0],
+            img_url=f"{MOVIE_DB_IMAGE_URL}{data['poster_path']}",
+            description=data["overview"]
+        )
+        db.session.add(new_movie)
+        db.session.commit()
+        return redirect(url_for("rate_movie", id=new_movie.id))
+
+
+@app.route("/edit", methods=["GET", "POST"])
+def rate_movie():
+    form = RateMovieForm()
+    movie_id = request.args.get("id")
+    movie = Movie.query.get(movie_id)
+    if form.validate_on_submit():
+        movie.rating = float(form.rating.data)
+        movie.review = form.review.data
+        db.session.commit()
+        return redirect(url_for('movie'))
+    return render_template("edit_movie.html", movie=movie, form=form)
+
+
+@app.route("/delete")
+def delete_movie():
+    movie_id = request.args.get("id")
+    movie = Movie.query.get(movie_id)
+    db.session.delete(movie)
+    db.session.commit()
+    return redirect(url_for("movie"))
+
+
+
+
+
+
 
 
 ##CONFIGURE TABLE
